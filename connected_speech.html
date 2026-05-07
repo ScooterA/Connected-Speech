@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connected Speech Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #070b12;
+  --bg2:     #0f1520;
+  --bg3:     #18202e;
+  --bg4:     #1f2a3c;
+  --accent:  #00d4ff;
+  --accent2: #ffd60a;
+  --accent3: #ff6b6b;
+  --green:   #3ddc84;
+  --text:    #e8edf5;
+  --text2:   #7a8ba3;
+  --border:  #1e2d42;
+  --radius:  14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── SCREEN SYSTEM ── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ── HOME ── */
+#home {
+  padding: 32px 20px 40px;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+}
+.home-header { text-align: center; margin-bottom: 36px; }
+.logo-tag {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin-bottom: 14px;
+}
+.home-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(28px, 6vw, 46px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.home-title span { color: var(--accent); }
+.home-sub { color: var(--text2); font-size: 15px; line-height: 1.6; }
+
+.mode-btns { display: flex; gap: 10px; margin-bottom: 32px; }
+.mode-btn {
+  flex: 1; padding: 14px; border-radius: var(--radius);
+  border: 2px solid var(--border); background: var(--bg2);
+  color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all .2s; text-align: center;
+}
+.mode-btn.active, .mode-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--bg3); }
+.mode-btn .btn-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+
+.section-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 2px;
+  color: var(--text2); text-transform: uppercase; margin-bottom: 14px;
+}
+.stages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stage-card {
+  background: var(--bg2); border: 2px solid var(--border);
+  border-radius: var(--radius); padding: 18px 16px;
+  cursor: pointer; transition: all .22s; position: relative; overflow: hidden;
+}
+.stage-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--card-color, var(--accent));
+}
+.stage-card:hover { border-color: var(--card-color, var(--accent)); transform: translateY(-2px); background: var(--bg3); }
+.stage-card.locked { opacity: .45; cursor: not-allowed; }
+.stage-card.locked:hover { transform: none; border-color: var(--border); background: var(--bg2); }
+.stage-card.completed::after {
+  content: '✓'; position: absolute; top: 10px; right: 12px;
+  color: var(--green); font-weight: 700; font-size: 14px;
+}
+.stage-num {
+  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 1px; color: var(--card-color, var(--accent));
+  margin-bottom: 4px;
+}
+.stage-name { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+.stage-desc { font-size: 12px; color: var(--text2); line-height: 1.4; }
+.stage-lock { position: absolute; top: 10px; right: 12px; font-size: 13px; color: var(--text2); }
+
+.quiz-btn {
+  width: 100%; padding: 16px; border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--accent2) 0%, #ff9500 100%);
+  color: var(--bg); border: none; font-family: 'Syne', sans-serif;
+  font-size: 16px; font-weight: 700; cursor: pointer;
+  transition: opacity .2s; letter-spacing: .5px;
+}
+.quiz-btn:hover { opacity: .9; }
+.quiz-btn:disabled { opacity: .4; cursor: not-allowed; }
+.quiz-unlock-note { text-align: center; font-size: 12px; color: var(--text2); margin-top: 8px; }
+
+/* ── LESSON ── */
+#lesson {
+  max-width: 720px; margin: 0 auto; width: 100%;
+  padding: 24px 20px 40px; flex-direction: column;
+}
+.back-btn {
+  background: none; border: none; color: var(--text2); cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 0;
+  display: flex; align-items: center; gap: 6px; margin-bottom: 24px;
+  transition: color .15s;
+}
+.back-btn:hover { color: var(--text); }
+.lesson-header { margin-bottom: 24px; }
+.lesson-stage-tag {
+  font-size: 11px; font-weight: 600; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.lesson-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+.lesson-progress-bar {
+  height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; margin-top: 16px;
+}
+.lesson-progress-fill { height: 100%; border-radius: 2px; transition: width .4s; }
+
+/* TABS */
+.tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--bg2); padding: 4px; border-radius: 10px; }
+.tab-btn {
+  flex: 1; padding: 9px; border-radius: 8px; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+  background: none; color: var(--text2); transition: all .2s;
+}
+.tab-btn.active { background: var(--bg4); color: var(--text); }
+
+/* LEARN TAB */
+.explain-box {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px; margin-bottom: 20px;
+  font-size: 14px; line-height: 1.7; color: var(--text2);
+}
+.explain-box strong { color: var(--text); }
+.examples-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+.example-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.speak-btn {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; cursor: pointer;
+  color: var(--accent); font-size: 16px; flex-shrink: 0;
+  transition: all .15s;
+}
+.speak-btn:hover { background: var(--accent); color: var(--bg); }
+.example-text { flex: 1; }
+.ex-written { font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+.ex-arrow { color: var(--text2); margin: 0 4px; }
+.ex-spoken { color: var(--accent); font-style: italic; font-size: 15px; }
+.ex-note { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+.start-practice-btn {
+  width: 100%; padding: 15px; border-radius: var(--radius);
+  border: none; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: opacity .2s; color: var(--bg);
+}
+.start-practice-btn:hover { opacity: .9; }
+
+/* PRACTICE TAB */
+.exercise-wrap { }
+.ex-counter {
+  font-size: 12px; color: var(--text2); font-weight: 600; letter-spacing: 1px; margin-bottom: 20px;
+}
+.question-box {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px 20px; margin-bottom: 20px;
+}
+.question-label { font-size: 11px; color: var(--text2); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+.question-text { font-size: 17px; font-weight: 500; line-height: 1.5; }
+.options-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.option-btn {
+  background: var(--bg2); border: 2px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  text-align: left; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 500; color: var(--text); transition: all .18s;
+  display: flex; align-items: center; gap: 12px;
+}
+.option-btn:hover:not(:disabled) { border-color: var(--accent); background: var(--bg3); }
+.option-btn.correct { border-color: var(--green); background: rgba(61,220,132,.12); color: var(--green); }
+.option-btn.wrong { border-color: var(--accent3); background: rgba(255,107,107,.12); color: var(--accent3); }
+.option-btn:disabled { cursor: default; }
+.opt-letter {
+  width: 26px; height: 26px; border-radius: 50%; background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0; color: var(--text2);
+}
+.option-btn.correct .opt-letter { background: var(--green); color: var(--bg); }
+.option-btn.wrong .opt-letter { background: var(--accent3); color: var(--bg); }
+
+.feedback-box {
+  background: var(--bg2); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 16px; font-size: 14px;
+  line-height: 1.6; display: none;
+}
+.feedback-box.show { display: block; }
+.feedback-box.correct-fb { border: 1px solid var(--green); color: var(--green); }
+.feedback-box.wrong-fb { border: 1px solid var(--accent3); color: var(--text); }
+.feedback-label { font-weight: 700; margin-bottom: 4px; }
+
+.next-btn {
+  width: 100%; padding: 14px; border-radius: var(--radius); border: none;
+  font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; display: none; color: var(--bg); transition: opacity .2s;
+}
+.next-btn.show { display: block; }
+.next-btn:hover { opacity: .9; }
+
+/* STAGE COMPLETE */
+.stage-complete {
+  text-align: center; padding: 40px 20px; display: none;
+}
+.stage-complete.show { display: block; }
+.complete-icon { font-size: 60px; margin-bottom: 16px; }
+.complete-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+.complete-score { font-size: 15px; color: var(--text2); margin-bottom: 28px; }
+.complete-btns { display: flex; flex-direction: column; gap: 10px; max-width: 280px; margin: 0 auto; }
+.complete-btns button {
+  padding: 13px; border-radius: var(--radius); border: none;
+  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: opacity .2s;
+}
+.complete-btns button:hover { opacity: .85; }
+
+/* ── QUIZ SCREEN ── */
+#quiz {
+  max-width: 720px; margin: 0 auto; width: 100%;
+  padding: 24px 20px 40px;
+}
+.quiz-header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+.quiz-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; flex: 1; }
+.quiz-score-badge {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 600; white-space: nowrap;
+}
+.quiz-progress {
+  height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; margin-bottom: 24px;
+}
+.quiz-progress-fill {
+  height: 100%; background: var(--accent2); border-radius: 2px; transition: width .4s;
+}
+.quiz-stage-tag {
+  font-size: 11px; color: var(--text2); font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px;
+}
+
+/* RESULTS */
+#results {
+  max-width: 560px; margin: 0 auto; width: 100%;
+  padding: 48px 20px; text-align: center;
+}
+.results-icon { font-size: 70px; margin-bottom: 20px; }
+.results-title { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+.results-sub { font-size: 15px; color: var(--text2); margin-bottom: 32px; line-height: 1.6; }
+.score-ring {
+  width: 140px; height: 140px; margin: 0 auto 32px;
+  position: relative; display: flex; align-items: center; justify-content: center;
+}
+.score-ring svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+.score-ring-inner { text-align: center; }
+.score-pct { font-family: 'Syne', sans-serif; font-size: 34px; font-weight: 800; }
+.score-label { font-size: 12px; color: var(--text2); font-weight: 600; }
+.results-breakdown {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 28px; text-align: left;
+}
+.breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 14px; }
+.breakdown-row + .breakdown-row { border-top: 1px solid var(--border); }
+.breakdown-stage { color: var(--text2); }
+.breakdown-score { font-weight: 600; }
+.results-btns { display: flex; flex-direction: column; gap: 10px; }
+.results-btns button {
+  padding: 14px; border-radius: var(--radius); border: none;
+  font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: opacity .2s;
+}
+.results-btns button:hover { opacity: .85; }
+
+/* Utilities */
+.txt-accent { color: var(--accent); }
+.spacer { flex: 1; }
+</style>
+</head>
+<body>
+
+<!-- ══ HOME SCREEN ══ -->
+<div id="home" class="screen active">
+  <div class="home-header">
+    <div class="logo-tag">ESL · PHONOLOGY</div>
+    <h1 class="home-title">Connected<br><span>Speech Lab</span></h1>
+    <p class="home-sub">Master the sounds of natural English — one stage at a time.</p>
+  </div>
+
+  <p class="section-label">Choose Your Stage</p>
+  <div class="stages-grid" id="stagesGrid"></div>
+
+  <button class="quiz-btn" id="quizBtn" onclick="startQuiz()">⚡ Take the Quiz</button>
+  <p class="quiz-unlock-note" id="quizNote"></p>
+</div>
+
+<!-- ══ LESSON SCREEN ══ -->
+<div id="lesson" class="screen">
+  <button class="back-btn" onclick="goHome()">← Back to Stages</button>
+  <div class="lesson-header">
+    <div class="lesson-stage-tag" id="lessonStageTag"></div>
+    <h2 class="lesson-title" id="lessonTitle"></h2>
+    <div class="lesson-progress-bar"><div class="lesson-progress-fill" id="lessonProgressFill"></div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tabLearn" onclick="switchTab('learn')">📖 Learn</button>
+    <button class="tab-btn" id="tabPractice" onclick="switchTab('practice')">✏️ Practice</button>
+  </div>
+
+  <!-- LEARN TAB -->
+  <div id="learnTab">
+    <div class="explain-box" id="explainBox"></div>
+    <p class="section-label">Examples</p>
+    <div class="examples-list" id="examplesList"></div>
+    <button class="start-practice-btn" id="startPracticeBtn" onclick="switchTab('practice')">Start Practice →</button>
+  </div>
+
+  <!-- PRACTICE TAB -->
+  <div id="practiceTab" style="display:none">
+    <div class="exercise-wrap" id="exerciseWrap">
+      <div class="ex-counter" id="exCounter"></div>
+      <div class="question-box">
+        <div class="question-label">Question</div>
+        <div class="question-text" id="questionText"></div>
+      </div>
+      <div class="options-grid" id="optionsGrid"></div>
+      <div class="feedback-box" id="feedbackBox">
+        <div class="feedback-label" id="feedbackLabel"></div>
+        <div id="feedbackText"></div>
+      </div>
+      <button class="next-btn" id="nextBtn" onclick="nextExercise()">Next Question →</button>
+    </div>
+
+    <div class="stage-complete" id="stageComplete">
+      <div class="complete-icon" id="completeIcon"></div>
+      <h3 class="complete-title" id="completeTitle"></h3>
+      <p class="complete-score" id="completeScore"></p>
+      <div class="complete-btns">
+        <button id="nextStageBtn" onclick="goNextStage()" style="background:var(--accent);color:var(--bg)">Next Stage →</button>
+        <button onclick="switchTab('learn')" style="background:var(--bg3);color:var(--text);border:1px solid var(--border)">Review Lesson</button>
+        <button onclick="goHome()" style="background:var(--bg2);color:var(--text2)">Back to Stages</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ QUIZ SCREEN ══ -->
+<div id="quiz" class="screen">
+  <button class="back-btn" onclick="goHome()">← Back to Stages</button>
+  <div class="quiz-header">
+    <h2 class="quiz-title">⚡ Quick Quiz</h2>
+    <div class="quiz-score-badge" id="quizScoreBadge">Score: 0</div>
+  </div>
+  <div class="quiz-progress"><div class="quiz-progress-fill" id="quizProgressFill"></div></div>
+  <div class="quiz-stage-tag" id="quizStageTag"></div>
+  <div class="question-box">
+    <div class="question-label">Question</div>
+    <div class="question-text" id="quizQuestion"></div>
+  </div>
+  <div class="options-grid" id="quizOptions"></div>
+  <div class="feedback-box" id="quizFeedback">
+    <div class="feedback-label" id="quizFeedbackLabel"></div>
+    <div id="quizFeedbackText"></div>
+  </div>
+  <button class="next-btn" id="quizNextBtn" onclick="nextQuizQ()">Next Question →</button>
+</div>
+
+<!-- ══ RESULTS SCREEN ══ -->
+<div id="results" class="screen">
+  <div class="results-icon" id="resultsIcon"></div>
+  <h2 class="results-title" id="resultsTitle"></h2>
+  <p class="results-sub" id="resultsSub"></p>
+  <div class="score-ring">
+    <svg width="140" height="140" viewBox="0 0 140 140">
+      <circle cx="70" cy="70" r="60" fill="none" stroke="#1f2a3c" stroke-width="10"/>
+      <circle id="scoreArc" cx="70" cy="70" r="60" fill="none" stroke="#ffd60a" stroke-width="10"
+              stroke-dasharray="0 377" stroke-linecap="round"/>
+    </svg>
+    <div class="score-ring-inner">
+      <div class="score-pct" id="scorePct"></div>
+      <div class="score-label">SCORE</div>
+    </div>
+  </div>
+  <div class="results-breakdown" id="resultsBreakdown"></div>
+  <div class="results-btns">
+    <button onclick="startQuiz()" style="background:var(--accent2);color:var(--bg)">Try Again</button>
+    <button onclick="goHome()" style="background:var(--bg3);color:var(--text)">Back to Stages</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════
+const STAGE_COLORS = [
+  '#00d4ff','#ffd60a','#ff6b6b','#3ddc84',
+  '#c084fc','#fb923c','#34d399','#f472b6','#60a5fa'
+];
+
+const stages = [
+  {
+    id: 1,
+    title: "Weak Forms",
+    icon: "🔉",
+    desc: "Function words reduced in natural speech",
+    explanation: `In natural English, <strong>function words</strong> (articles, prepositions, conjunctions, auxiliaries) are rarely stressed. Instead, they shrink into quieter, shorter <strong>weak forms</strong> using the schwa /ə/ sound. This is one of the most common features of connected speech.`,
+    examples: [
+      { written: "fish and chips",   spoken: "fish ən chips",    note: "'and' → /ən/" },
+      { written: "I want to go",     spoken: "I wənt tə go",     note: "'to' → /tə/" },
+      { written: "I can do it",      spoken: "I kən do it",      note: "'can' → /kən/" },
+      { written: "a cup of tea",     spoken: "ə cup əv tea",     note: "'a' → /ə/,  'of' → /əv/" },
+      { written: "are you ready?",   spoken: "ə you ready?",     note: "'are' → /ə/" },
+    ],
+    exercises: [
+      {
+        q: "How is 'and' usually pronounced in 'bread and butter'?",
+        opts: ["bread AND butter", "bread ən butter", "bread ann butter", "bread n butter"],
+        correct: 1,
+        exp: "'and' becomes /ən/ — the vowel reduces to a schwa in unstressed position."
+      },
+      {
+        q: "Which sentence correctly shows the weak form of 'to'?",
+        opts: ["I want TO see you", "I want tuh see you", "I wənt tə see you", "I wanna see you (this is elision)"],
+        correct: 2,
+        exp: "'to' reduces to /tə/ before a consonant. The vowel becomes an unstressed schwa."
+      },
+      {
+        q: "What happens to 'can' in: 'She can swim really well'?",
+        opts: ["It stays as /kæn/", "It becomes /kən/", "It becomes /kun/", "It is dropped completely"],
+        correct: 1,
+        exp: "'can' reduces to /kən/ — the strong vowel /æ/ becomes a schwa when unstressed."
+      },
+      {
+        q: "In 'a cup of tea', how many weak forms are there?",
+        opts: ["None", "One ('a')", "Two ('a' and 'of')", "Three"],
+        correct: 2,
+        exp: "Both 'a' (/ə/) and 'of' (/əv/) use weak forms. These are extremely common in everyday speech."
+      },
+      {
+        q: "Which word is NOT commonly used in a weak form?",
+        opts: ["the", "and", "run", "can"],
+        correct: 2,
+        exp: "'run' is a content word (verb) — it carries meaning and is typically stressed. Function words like 'the', 'and', 'can' are commonly weakened."
+      },
+    ]
+  },
+  {
+    id: 2,
+    title: "Contractions",
+    icon: "✂️",
+    desc: "Subject + auxiliary blended together",
+    explanation: `<strong>Contractions</strong> combine a subject or auxiliary verb with another word, dropping letters and replacing them with an apostrophe. They are extremely common in spoken English and make speech sound more natural and fluent. Using full forms can sound formal or even unnatural in conversation.`,
+    examples: [
+      { written: "I am going",       spoken: "I'm going",       note: "I + am → I'm" },
+      { written: "do not worry",     spoken: "don't worry",     note: "do + not → don't" },
+      { written: "they are ready",   spoken: "they're ready",   note: "they + are → they're" },
+      { written: "I would have gone",spoken: "I would've gone", note: "would + have → would've" },
+      { written: "she will not come",spoken: "she won't come",  note: "will + not → won't (irregular!)" },
+    ],
+    exercises: [
+      {
+        q: "What is the contracted form of 'they are'?",
+        opts: ["theyre", "they're", "ther'e", "they`re"],
+        correct: 1,
+        exp: "'they are' → 'they're'. The apostrophe replaces the 'a' from 'are'."
+      },
+      {
+        q: "Which contraction is irregular (changes form, not just drops letters)?",
+        opts: ["I'm", "don't", "won't", "it's"],
+        correct: 2,
+        exp: "'won't' is irregular — it comes from 'will not' but changes form. All others are straightforward drops."
+      },
+      {
+        q: "Complete: 'I _____ seen that film yet.'",
+        opts: ["haven't", "have'nt", "havent", "havnt"],
+        correct: 0,
+        exp: "'have not' → 'haven't'. The apostrophe replaces the 'o' from 'not'."
+      },
+      {
+        q: "'Should have' in natural speech becomes:",
+        opts: ["should of", "should've", "shoulda", "should'a"],
+        correct: 1,
+        exp: "'should have' → 'should've'. Note: people often write 'should of' but this is a spelling error — it's always 'have'."
+      },
+      {
+        q: "Which is NOT a standard contraction?",
+        opts: ["we'd", "they'd", "its'", "you'll"],
+        correct: 2,
+        exp: "'its'' is not a standard contraction. 'its' (possessive) has no apostrophe. The contraction of 'it is' is 'it's'."
+      },
+    ]
+  },
+  {
+    id: 3,
+    title: "Linking: C → V",
+    icon: "🔗",
+    desc: "Consonant sound moves to the next vowel",
+    explanation: `When a word ends in a <strong>consonant sound</strong> and the next word starts with a <strong>vowel sound</strong>, the consonant 'links across' to the next word. The words blend together and the consonant is shared between them. This is called <strong>consonant-to-vowel linking</strong> and is very common in natural English.`,
+    examples: [
+      { written: "turn off",        spoken: "tur·noff",         note: "n links to 'off'" },
+      { written: "pick up",         spoken: "pi·kup",           note: "k links to 'up'" },
+      { written: "hold on",         spoken: "hol·don",          note: "d links to 'on'" },
+      { written: "find out",        spoken: "fin·dout",         note: "d links to 'out'" },
+      { written: "come in",         spoken: "co·min",           note: "m links to 'in'" },
+    ],
+    exercises: [
+      {
+        q: "How does 'turn off' sound in natural speech?",
+        opts: ["turn - off (separate)", "tur·noff (linked)", "turn·off (n doubles)", "turnoff (written as one)"],
+        correct: 1,
+        exp: "The /n/ from 'turn' links across to 'off', making it sound like 'tur-noff'. Words blend together."
+      },
+      {
+        q: "Which pair shows consonant-to-vowel linking?",
+        opts: ["big game", "pick up", "hot day", "black coat"],
+        correct: 1,
+        exp: "'pick up' — the /k/ consonant links to the vowel 'u' in 'up'. The others show different features."
+      },
+      {
+        q: "In 'an apple', the linking creates which sound?",
+        opts: ["a-napple", "an-apple", "a napple", "an apple (no change)"],
+        correct: 0,
+        exp: "The /n/ from 'an' links to 'apple', creating 'a·napple'. This is why 'an' is used before vowels — the n naturally links."
+      },
+      {
+        q: "How would a native speaker say 'not at all'?",
+        opts: ["NOT at ALL", "not-at-all (with pauses)", "no·ta·tall", "not@all"],
+        correct: 2,
+        exp: "All three words link together: /t/ → 'at', /t/ → 'all', creating 'no·ta·tall' — three linked syllables."
+      },
+      {
+        q: "Consonant-to-vowel linking happens when:",
+        opts: [
+          "A word ends in a vowel, the next starts with a consonant",
+          "A word ends in a consonant, the next starts with a vowel",
+          "Two identical consonants meet",
+          "A function word is reduced"
+        ],
+        correct: 1,
+        exp: "Correct — consonant to vowel: the final consonant 'slides' across to begin the next syllable."
+      },
+    ]
+  },
+  {
+    id: 4,
+    title: "Linking: V → V",
+    icon: "〰️",
+    desc: "Glide sounds inserted between vowels",
+    explanation: `When a word ends in a <strong>vowel sound</strong> and the next word also starts with a vowel sound, English speakers naturally insert a small <strong>glide sound</strong> to bridge them. The glide is either <strong>/w/</strong> (after rounded vowels like /uː/, /əʊ/), <strong>/j/</strong> (after front vowels like /iː/, /eɪ/), or <strong>/r/</strong> (after certain vowels in some accents — called intrusion).`,
+    examples: [
+      { written: "go away",         spoken: "go·w·away",        note: "/w/ glide after /əʊ/" },
+      { written: "you always",      spoken: "you·w·always",     note: "/w/ glide after /uː/" },
+      { written: "I agree",         spoken: "I·j·agree",        note: "/j/ glide after /aɪ/" },
+      { written: "she asked",       spoken: "she·j·asked",      note: "/j/ glide after /iː/" },
+      { written: "law and order",   spoken: "law·r·and order",  note: "/r/ intrusion (British English)" },
+    ],
+    exercises: [
+      {
+        q: "What glide sound is inserted in 'go away'?",
+        opts: ["/j/ (y sound)", "/w/ (w sound)", "/r/ (r sound)", "No glide — it's just linking"],
+        correct: 1,
+        exp: "After 'go' /gəʊ/ — a rounded vowel — a /w/ glide is inserted: 'go·w·away'."
+      },
+      {
+        q: "In 'I agree', what sound is inserted?",
+        opts: ["/w/", "/r/", "/j/ (like 'y')", "Nothing — the vowels just blend"],
+        correct: 2,
+        exp: "After 'I' /aɪ/ — a front vowel — a /j/ glide appears: 'I·j·agree'. It sounds like a very soft 'y'."
+      },
+      {
+        q: "The /r/ glide in 'law and order' is called:",
+        opts: ["Linking R", "Intrusive R", "Flap R", "Dropped R"],
+        correct: 1,
+        exp: "This /r/ is called 'intrusive R' — it is inserted even though there is no 'r' in the spelling."
+      },
+      {
+        q: "After which vowel would you expect a /w/ glide?",
+        opts: ["/iː/ (as in 'see')", "/eɪ/ (as in 'day')", "/uː/ (as in 'you')", "/æ/ (as in 'cat')"],
+        correct: 2,
+        exp: "/uː/ is a rounded vowel — the lips stay rounded and naturally produce a /w/ glide before the next vowel."
+      },
+      {
+        q: "Why do glide sounds occur in V→V linking?",
+        opts: [
+          "To avoid two vowel sounds running together abruptly",
+          "To make words shorter",
+          "Because consonants need vowels next to them",
+          "It's a mistake that native speakers make"
+        ],
+        correct: 0,
+        exp: "Glides act as a smooth transition — they prevent an abrupt collision of two vowel sounds, making speech flow naturally."
+      },
+    ]
+  },
+  {
+    id: 5,
+    title: "Elision",
+    icon: "💨",
+    desc: "Sounds disappear in fast speech",
+    explanation: `<strong>Elision</strong> means that certain sounds are <em>dropped</em> entirely in natural connected speech. It most commonly affects consonant clusters — especially /t/, /d/ and /k/ sounds when they appear between other consonants. The missing sound is not replaced — it simply disappears to make the words easier and faster to say.`,
+    examples: [
+      { written: "next please",      spoken: "nex please",       note: "/t/ dropped in cluster" },
+      { written: "last time",        spoken: "las time",         note: "/t/ dropped before consonant" },
+      { written: "friendship",       spoken: "frenship",         note: "middle 'd' dropped" },
+      { written: "mostly",           spoken: "mosly",            note: "/t/ dropped in cluster /stl/" },
+      { written: "I don't know",     spoken: "I dunno",          note: "informal heavy elision" },
+    ],
+    exercises: [
+      {
+        q: "What happens to the /t/ in 'next please'?",
+        opts: [
+          "It is pronounced clearly",
+          "It is linked to 'please'",
+          "It is dropped — not pronounced",
+          "It becomes a glottal stop"
+        ],
+        correct: 2,
+        exp: "The /t/ in 'next' is elided — it disappears because it sits between two consonants (/kst/ + /pl/), making the cluster too difficult to articulate clearly."
+      },
+      {
+        q: "In which word does elision occur in 'last chance'?",
+        opts: ["'last' (the /t/ is dropped)", "'chance' (the /ch/ is dropped)", "Both words", "Neither — both are pronounced fully"],
+        correct: 0,
+        exp: "The /t/ at the end of 'last' is dropped before the consonant /tʃ/ in 'chance', giving 'las chance'."
+      },
+      {
+        q: "Which word is likely elided in rapid speech: 'I don't know'?",
+        opts: ["'I' disappears", "'don't' loses its /t/", "Both 't' sounds disappear, giving 'dunno'", "Nothing changes"],
+        correct: 2,
+        exp: "'I don't know' can become 'dunno' in informal speech — heavy elision plus vowel reduction collapses the whole phrase."
+      },
+      {
+        q: "Elision most commonly affects which sounds?",
+        opts: ["/m/ and /n/", "/t/, /d/ and consonant clusters", "All vowels", "/s/ and /z/"],
+        correct: 1,
+        exp: "/t/ and /d/ are the most frequently elided sounds, especially when they sit between two other consonants."
+      },
+      {
+        q: "What does 'mostly' often sound like in natural speech?",
+        opts: ["most-lee", "mos-lee (t dropped)", "moze-lee", "most (ly dropped)"],
+        correct: 1,
+        exp: "The /t/ in 'mostly' is typically elided — the cluster /stl/ simplifies to /sl/, giving 'mosly'."
+      },
+    ]
+  },
+  {
+    id: 6,
+    title: "Assimilation",
+    icon: "🔄",
+    desc: "Sounds change to match their neighbours",
+    explanation: `<strong>Assimilation</strong> happens when a sound <em>changes</em> to become more like a neighbouring sound. Rather than disappearing (elision), the sound takes on properties of the sound next to it. The most common type is when a final consonant changes its place of articulation to match the first consonant of the next word.`,
+    examples: [
+      { written: "ten boys",         spoken: "tem boys",         note: "/n/ → /m/ before /b/" },
+      { written: "that person",      spoken: "thap person",      note: "/t/ → /p/ before /p/" },
+      { written: "good boy",         spoken: "goob boy",         note: "/d/ → /b/ before /b/" },
+      { written: "in bed",           spoken: "im bed",           note: "/n/ → /m/ before /b/" },
+      { written: "this shop",        spoken: "thish shop",       note: "/s/ → /ʃ/ before /ʃ/" },
+    ],
+    exercises: [
+      {
+        q: "In 'ten boys', what does the /n/ change to?",
+        opts: ["/n/ (stays the same)", "/m/", "/ŋ/ (as in 'sing')", "/b/"],
+        correct: 1,
+        exp: "The /n/ in 'ten' becomes /m/ before /b/ in 'boys'. Both /m/ and /b/ are bilabial (made with both lips) — the sound moves to match its neighbour."
+      },
+      {
+        q: "Why does assimilation happen?",
+        opts: [
+          "Speakers are careless",
+          "The mouth prepares for the next sound before finishing the current one",
+          "It only happens in dialects",
+          "To save syllables"
+        ],
+        correct: 1,
+        exp: "Assimilation is a natural result of anticipatory articulation — the mouth starts moving toward the next sound before finishing the current one. It's efficient, not lazy."
+      },
+      {
+        q: "'That person' is often said as:",
+        opts: ["that person (both clear)", "tha person (t dropped)", "thap person (t → p)", "thad person (t → d)"],
+        correct: 2,
+        exp: "The /t/ at the end of 'that' assimilates to /p/ before the /p/ of 'person'. Both become bilabial, so you get 'thap person'."
+      },
+      {
+        q: "In 'in bed', the /n/ becomes:",
+        opts: ["/n/ — no change", "/m/ — bilabial", "/ŋ/ — velar", "/d/ — alveolar"],
+        correct: 1,
+        exp: "Before /b/ (a bilabial consonant), the /n/ (alveolar) shifts to /m/ (also bilabial), giving 'im bed'."
+      },
+      {
+        q: "Assimilation is different from elision because:",
+        opts: [
+          "Assimilation adds new sounds",
+          "In assimilation the sound changes; in elision it disappears completely",
+          "Elision is informal; assimilation is formal",
+          "They are the same thing"
+        ],
+        correct: 1,
+        exp: "Correct — in elision, a sound is lost. In assimilation, the sound stays but changes its quality to match a neighbour."
+      },
+    ]
+  },
+  {
+    id: 7,
+    title: "Geminates",
+    icon: "⚡",
+    desc: "Identical consonants merge into one",
+    explanation: `A <strong>geminate</strong> (or double consonant) occurs when two identical or very similar consonants meet at a word boundary. Rather than pronouncing the consonant twice, speakers produce one single, slightly longer consonant. The first consonant simply merges into the second.`,
+    examples: [
+      { written: "big game",        spoken: "bi·game",          note: "/g/ + /g/ → one /g/" },
+      { written: "black coat",      spoken: "bla·coat",         note: "/k/ + /k/ → one /k/" },
+      { written: "that time",       spoken: "tha·time",         note: "/t/ + /t/ → one /t/" },
+      { written: "some more",       spoken: "so·more",          note: "/m/ + /m/ → one /m/" },
+      { written: "bad day",         spoken: "ba·day",           note: "/d/ + /d/ → one /d/" },
+    ],
+    exercises: [
+      {
+        q: "How is 'big game' pronounced in natural speech?",
+        opts: ["bigg-game (double g)", "bi·game (one g)", "big-game (clear pause)", "bih-game"],
+        correct: 1,
+        exp: "The two /g/ sounds merge into one — the first /g/ is never released, and you hear a single slightly-held /g/: 'bi·game'."
+      },
+      {
+        q: "A geminate is:",
+        opts: [
+          "When a sound disappears",
+          "When two identical consonants at a word boundary merge into one",
+          "When a sound changes to match its neighbour",
+          "When a /w/ or /j/ is inserted"
+        ],
+        correct: 1,
+        exp: "Correct — identical consonants at a boundary don't double up. They merge into one, slightly longer consonant."
+      },
+      {
+        q: "In 'that time', what happens at the word boundary?",
+        opts: [
+          "Both /t/ sounds are pronounced",
+          "The first /t/ is dropped (elision)",
+          "The two /t/ sounds merge into one",
+          "A schwa is inserted between them"
+        ],
+        correct: 2,
+        exp: "'that time' → 'tha·time'. The /t/ at the end of 'that' and the /t/ at the start of 'time' merge into a single /t/."
+      },
+      {
+        q: "Geminates are most noticeable when two words share the same:",
+        opts: ["vowel sounds", "consonant sounds at the boundary", "syllable stress", "weak forms"],
+        correct: 1,
+        exp: "Geminates occur when the final consonant of one word matches the initial consonant of the next word."
+      },
+      {
+        q: "What is the spoken form of 'some more cake'?",
+        opts: ["some·more cake (mm merged)", "sommm more cake", "sume more cake", "some - more cake"],
+        correct: 0,
+        exp: "The /m/ at the end of 'some' and the /m/ at the start of 'more' merge: 'so·more cake'."
+      },
+    ]
+  },
+  {
+    id: 8,
+    title: "Intrusion",
+    icon: "➕",
+    desc: "Extra sounds added between vowels",
+    explanation: `<strong>Intrusion</strong> is when an extra consonant sound is <em>added</em> into the speech stream — a sound that doesn't exist in the spelling at all. This happens at vowel-to-vowel boundaries. English speakers insert a /r/, /w/, or /j/ to help vowels flow together smoothly. The <strong>intrusive /r/</strong> is especially common in non-rhotic accents (British English).`,
+    examples: [
+      { written: "law and order",    spoken: "law·r·and order",   note: "Intrusive /r/ — British English" },
+      { written: "idea of",          spoken: "idea·r·of",         note: "Intrusive /r/ after /ə/" },
+      { written: "the area is",      spoken: "the area·r·is",     note: "Intrusive /r/ at end of /ə/" },
+      { written: "to Africa",        spoken: "to·w·Africa",       note: "Intrusive /w/ after /uː/" },
+      { written: "I agree",          spoken: "I·j·agree",         note: "Intrusive /j/ after /aɪ/" },
+    ],
+    exercises: [
+      {
+        q: "What is an 'intrusive R'?",
+        opts: [
+          "An /r/ that already exists in the spelling but isn't pronounced",
+          "An /r/ sound added between vowels that does not exist in the spelling",
+          "An /r/ that links a consonant to a vowel",
+          "An American English feature"
+        ],
+        correct: 1,
+        exp: "Intrusive /r/ is an /r/ inserted at a vowel boundary — especially after /ə/, /ɑː/, /ɔː/ — that has NO basis in the spelling."
+      },
+      {
+        q: "In 'law and order', the /r/ sound is intrusive because:",
+        opts: [
+          "There is an 'r' in the spelling of 'law'",
+          "There is no 'r' in 'law' — the /r/ is added by speakers",
+          "It links a consonant to a vowel",
+          "It is only found in American English"
+        ],
+        correct: 1,
+        exp: "'law' has no 'r' — but British English speakers insert one before 'and'. This is intrusion: adding a sound not in the spelling."
+      },
+      {
+        q: "Intrusive /r/ most commonly occurs in which accent?",
+        opts: ["American English (rhotic)", "British English (non-rhotic)", "Australian English only", "All accents equally"],
+        correct: 1,
+        exp: "Intrusive /r/ is most associated with non-rhotic accents like British English, where final 'r' in spellings is often silent."
+      },
+      {
+        q: "After which sound is intrusive /r/ most likely?",
+        opts: ["/iː/ (as in 'see')", "/ɔː/ (as in 'law')", "/æ/ (as in 'cat')", "/p/ (a consonant)"],
+        correct: 1,
+        exp: "Intrusive /r/ typically follows /ə/, /ɑː/, and /ɔː/ — back vowels. After 'law' /lɔː/, an /r/ naturally intrudes before a following vowel."
+      },
+      {
+        q: "How does intrusion differ from linking /r/?",
+        opts: [
+          "They are the same thing",
+          "Linking /r/ connects words that DO have an 'r' in spelling; intrusive /r/ adds one where there is none",
+          "Intrusion is always /w/; linking is always /r/",
+          "Linking /r/ is incorrect; intrusion is standard"
+        ],
+        correct: 1,
+        exp: "Linking /r/ = an 'r' exists in spelling but is normally silent (like 'here') — it sounds when followed by a vowel. Intrusive /r/ = no 'r' in spelling at all."
+      },
+    ]
+  },
+  {
+    id: 9,
+    title: "Rhythm & Stress",
+    icon: "🎵",
+    desc: "Stress patterns, thought groups & rhythm",
+    explanation: `English is a <strong>stress-timed language</strong> — meaning the rhythm is driven by stressed syllables, not by counting syllables equally. In connected speech, content words (nouns, verbs, adjectives, adverbs) are usually <strong>stressed</strong>, while function words are unstressed. <strong>Thought groups</strong> are phrases grouped together, separated by tiny pauses. The most important stressed word in a thought group has <strong>nuclear stress</strong>.`,
+    examples: [
+      { written: "I WANT to GO to the SHOPS",  spoken: "I wənt tə GO tə ðə SHOPS",  note: "CAPS = stressed syllables" },
+      { written: "She's a REALLY good TEACHER", spoken: "She's ə REALLY good TEACHER", note: "Content words stressed" },
+      { written: "I didn't say HE stole it",   spoken: "Focus changes meaning",        note: "Nuclear stress changes meaning" },
+      { written: "What are you DOING? | Come HERE!", spoken: "Two thought groups",      note: "| = thought group boundary" },
+      { written: "It's BEAUTIFUL",             spoken: "BEAUtiful (3 syllables)",      note: "Word stress within the word" },
+    ],
+    exercises: [
+      {
+        q: "English is described as a 'stress-timed' language. What does this mean?",
+        opts: [
+          "Every syllable takes the same amount of time",
+          "Only the first syllable in a word is stressed",
+          "The rhythm is driven by stressed syllables occurring at regular intervals",
+          "Stress only occurs at the end of sentences"
+        ],
+        correct: 2,
+        exp: "In stress-timed languages like English, stressed syllables occur at roughly regular intervals — unstressed syllables squeeze in between. This gives English its characteristic 'bouncy' rhythm."
+      },
+      {
+        q: "Which words are typically STRESSED in English sentences?",
+        opts: [
+          "Function words: 'the', 'and', 'to', 'of'",
+          "Content words: nouns, main verbs, adjectives, adverbs",
+          "Only auxiliary verbs: 'is', 'was', 'can'",
+          "The first word of every sentence"
+        ],
+        correct: 1,
+        exp: "Content words carry meaning and receive stress. Function words are typically reduced to weak forms. This contrast creates English's characteristic rhythm."
+      },
+      {
+        q: "What is 'nuclear stress'?",
+        opts: [
+          "Stress that appears in every word",
+          "The strongest stress in a thought group — often the most important word",
+          "Stress that causes elision",
+          "Stress only found in academic language"
+        ],
+        correct: 1,
+        exp: "Nuclear stress is the main, most prominent stress in a thought group. It often signals the most important or new information in that phrase."
+      },
+      {
+        q: "'I didn't say HE stole it' vs 'I didn't say he STOLE it' — what changes?",
+        opts: [
+          "Nothing — stress doesn't change meaning",
+          "The meaning shifts — stress on HE implies someone else did; stress on STOLE implies something else happened",
+          "Only the speed changes",
+          "The sentence becomes informal"
+        ],
+        correct: 1,
+        exp: "Nuclear stress is powerful — moving it changes the focus and meaning of the sentence entirely. This is contrastive stress."
+      },
+      {
+        q: "What is a 'thought group' in connected speech?",
+        opts: [
+          "A single stressed word",
+          "A group of words that form a meaningful unit, separated by brief pauses",
+          "A synonym for a sentence",
+          "Words that all use weak forms"
+        ],
+        correct: 1,
+        exp: "Thought groups (or tone units) are natural chunks of speech separated by tiny pauses. Good speakers group words meaningfully — this helps listeners follow the message."
+      },
+    ]
+  },
+];
+
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+let progress = JSON.parse(localStorage.getItem('cs_progress') || '{}');
+// progress[stageId] = { completed: bool, bestScore: N, totalEx: N }
+
+let currentStage = null;
+let currentTab = 'learn';
+let currentExIdx = 0;
+let exerciseScore = 0;
+let answered = false;
+
+let quizQuestions = [];
+let quizIdx = 0;
+let quizScore = 0;
+let quizBreakdown = {};
+
+// ══════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════
+function saveProgress() { localStorage.setItem('cs_progress', JSON.stringify(progress)); }
+
+function isUnlocked(stageId) {
+  if (stageId === 1) return true;
+  return progress[stageId - 1] && progress[stageId - 1].completed;
+}
+
+function completedCount() { return Object.values(progress).filter(p => p.completed).length; }
+
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text.replace(/[·\/\|]/g, ' '));
+  u.rate = 0.85; u.lang = 'en-GB';
+  speechSynthesis.speak(u);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ══════════════════════════════════════════
+//  HOME
+// ══════════════════════════════════════════
+function renderHome() {
+  const grid = document.getElementById('stagesGrid');
+  grid.innerHTML = '';
+  stages.forEach((s, i) => {
+    const unlocked = isUnlocked(s.id);
+    const done = progress[s.id] && progress[s.id].completed;
+    const color = STAGE_COLORS[i];
+    const card = document.createElement('div');
+    card.className = 'stage-card' + (unlocked ? '' : ' locked') + (done ? ' completed' : '');
+    card.style.setProperty('--card-color', color);
+    card.innerHTML = `
+      ${!unlocked ? '<span class="stage-lock">🔒</span>' : ''}
+      <div class="stage-num">STAGE ${s.id}</div>
+      <div class="stage-name">${s.icon} ${s.title}</div>
+      <div class="stage-desc">${s.desc}</div>
+    `;
+    if (unlocked) card.onclick = () => openStage(s.id);
+    grid.appendChild(card);
+  });
+
+  const quizBtn = document.getElementById('quizBtn');
+  const quizNote = document.getElementById('quizNote');
+  const done = completedCount();
+  if (done === 0) {
+    quizBtn.disabled = true;
+    quizNote.textContent = 'Complete at least 1 stage to unlock the quiz';
+  } else {
+    quizBtn.disabled = false;
+    quizNote.textContent = `Quiz covers ${done} stage${done > 1 ? 's' : ''} — complete more stages for more questions!`;
+  }
+}
+
+function goHome() {
+  renderHome();
+  showScreen('home');
+}
+
+// ══════════════════════════════════════════
+//  LESSON
+// ══════════════════════════════════════════
+function openStage(stageId) {
+  currentStage = stages.find(s => s.id === stageId);
+  currentExIdx = 0;
+  exerciseScore = 0;
+  answered = false;
+  currentTab = 'learn';
+  renderLesson();
+  switchTab('learn');
+  showScreen('lesson');
+}
+
+function renderLesson() {
+  const s = currentStage;
+  const color = STAGE_COLORS[s.id - 1];
+  document.getElementById('lessonStageTag').textContent = `STAGE ${s.id}`;
+  document.getElementById('lessonStageTag').style.color = color;
+  document.getElementById('lessonTitle').textContent = `${s.icon} ${s.title}`;
+  document.getElementById('lessonProgressFill').style.background = color;
+  document.getElementById('lessonProgressFill').style.width = '0%';
+  document.getElementById('startPracticeBtn').style.background = color;
+
+  // Explanation
+  document.getElementById('explainBox').innerHTML = s.explanation;
+
+  // Examples
+  const list = document.getElementById('examplesList');
+  list.innerHTML = '';
+  s.examples.forEach(ex => {
+    const card = document.createElement('div');
+    card.className = 'example-card';
+    card.innerHTML = `
+      <button class="speak-btn" onclick="speak('${ex.written.replace(/'/g,"\\'")}')">🔊</button>
+      <div class="example-text">
+        <div class="ex-written">${ex.written}<span class="ex-arrow"> → </span><span class="ex-spoken">${ex.spoken}</span></div>
+        <div class="ex-note">${ex.note}</div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  renderExercise();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabLearn').className = 'tab-btn' + (tab === 'learn' ? ' active' : '');
+  document.getElementById('tabPractice').className = 'tab-btn' + (tab === 'practice' ? ' active' : '');
+  document.getElementById('learnTab').style.display = tab === 'learn' ? 'block' : 'none';
+  document.getElementById('practiceTab').style.display = tab === 'practice' ? 'block' : 'none';
+
+  if (tab === 'practice') {
+    const done = currentExIdx >= currentStage.exercises.length;
+    document.getElementById('exerciseWrap').style.display = done ? 'none' : 'block';
+    document.getElementById('stageComplete').className = 'stage-complete' + (done ? ' show' : '');
+  }
+}
+
+function renderExercise() {
+  const s = currentStage;
+  const color = STAGE_COLORS[s.id - 1];
+  const total = s.exercises.length;
+
+  if (currentExIdx >= total) {
+    // Show completion
+    document.getElementById('exerciseWrap').style.display = 'none';
+    document.getElementById('stageComplete').className = 'stage-complete show';
+    const pct = Math.round((exerciseScore / total) * 100);
+    document.getElementById('completeIcon').textContent = pct >= 80 ? '🏆' : pct >= 60 ? '✅' : '📚';
+    document.getElementById('completeTitle').textContent = pct >= 80 ? 'Excellent work!' : pct >= 60 ? 'Good effort!' : 'Keep practising!';
+    document.getElementById('completeScore').textContent = `You scored ${exerciseScore} out of ${total} (${pct}%)`;
+
+    // Save progress
+    const prev = progress[s.id] || {};
+    progress[s.id] = {
+      completed: true,
+      bestScore: Math.max(prev.bestScore || 0, exerciseScore),
+      totalEx: total
+    };
+    saveProgress();
+
+    // Next stage button
+    const nextBtn = document.getElementById('nextStageBtn');
+    const nextStage = stages.find(st => st.id === s.id + 1);
+    if (nextStage) {
+      nextBtn.textContent = `Next: ${nextStage.title} →`;
+      nextBtn.style.display = 'block';
+    } else {
+      nextBtn.textContent = 'All stages complete! 🎉';
+      nextBtn.onclick = goHome;
+    }
+    return;
+  }
+
+  // Progress bar
+  document.getElementById('lessonProgressFill').style.width = `${(currentExIdx / total) * 100}%`;
+
+  const ex = s.exercises[currentExIdx];
+  document.getElementById('exCounter').textContent = `QUESTION ${currentExIdx + 1} OF ${total}`;
+  document.getElementById('questionText').textContent = ex.q;
+  answered = false;
+
+  // Options
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  ex.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-letter">${'ABCD'[i]}</span>${opt}`;
+    btn.onclick = () => selectAnswer(i, btn);
+    grid.appendChild(btn);
+  });
+
+  // Reset feedback
+  const fb = document.getElementById('feedbackBox');
+  fb.className = 'feedback-box';
+  document.getElementById('feedbackLabel').textContent = '';
+  document.getElementById('feedbackText').textContent = '';
+  const nb = document.getElementById('nextBtn');
+  nb.className = 'next-btn';
+  nb.style.background = color;
+  nb.style.color = 'var(--bg)';
+  nb.textContent = currentExIdx < total - 1 ? 'Next Question →' : 'See Results →';
+}
+
+function selectAnswer(idx, btn) {
+  if (answered) return;
+  answered = true;
+  const ex = currentStage.exercises[currentExIdx];
+  const isCorrect = idx === ex.correct;
+  if (isCorrect) exerciseScore++;
+
+  // Style buttons
+  document.querySelectorAll('.option-btn').forEach((b, i) => {
+    b.disabled = true;
+    if (i === ex.correct) b.classList.add('correct');
+    else if (i === idx && !isCorrect) b.classList.add('wrong');
+  });
+
+  // Feedback
+  const fb = document.getElementById('feedbackBox');
+  fb.className = 'feedback-box show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+  document.getElementById('feedbackLabel').textContent = isCorrect ? '✓ Correct!' : '✗ Not quite.';
+  document.getElementById('feedbackText').textContent = ex.exp;
+
+  document.getElementById('nextBtn').className = 'next-btn show';
+}
+
+function nextExercise() {
+  currentExIdx++;
+  renderExercise();
+}
+
+function goNextStage() {
+  const nextId = currentStage.id + 1;
+  const next = stages.find(s => s.id === nextId);
+  if (next) openStage(next.id);
+  else goHome();
+}
+
+// ══════════════════════════════════════════
+//  QUIZ
+// ══════════════════════════════════════════
+function startQuiz() {
+  // Build question pool from completed stages
+  quizQuestions = [];
+  quizBreakdown = {};
+  stages.forEach(s => {
+    if (progress[s.id] && progress[s.id].completed) {
+      s.exercises.forEach(ex => {
+        quizQuestions.push({ ...ex, stageTitle: s.title, stageColor: STAGE_COLORS[s.id - 1] });
+      });
+      quizBreakdown[s.title] = { correct: 0, total: 0 };
+    }
+  });
+  // Shuffle
+  quizQuestions.sort(() => Math.random() - .5);
+  // Cap at 20
+  if (quizQuestions.length > 20) quizQuestions = quizQuestions.slice(0, 20);
+
+  quizIdx = 0;
+  quizScore = 0;
+  answered = false;
+
+  showScreen('quiz');
+  renderQuizQ();
+}
+
+function renderQuizQ() {
+  if (quizIdx >= quizQuestions.length) {
+    showResults();
+    return;
+  }
+
+  const q = quizQuestions[quizIdx];
+  const total = quizQuestions.length;
+
+  document.getElementById('quizProgressFill').style.width = `${(quizIdx / total) * 100}%`;
+  document.getElementById('quizScoreBadge').textContent = `Score: ${quizScore}/${quizIdx}`;
+  document.getElementById('quizStageTag').textContent = `STAGE: ${q.stageTitle}`;
+  document.getElementById('quizStageTag').style.color = q.stageColor;
+  document.getElementById('quizQuestion').textContent = q.q;
+
+  answered = false;
+
+  // Options
+  const grid = document.getElementById('quizOptions');
+  grid.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-letter">${'ABCD'[i]}</span>${opt}`;
+    btn.onclick = () => selectQuizAnswer(i, btn);
+    grid.appendChild(btn);
+  });
+
+  const fb = document.getElementById('quizFeedback');
+  fb.className = 'feedback-box';
+  document.getElementById('quizFeedbackLabel').textContent = '';
+  document.getElementById('quizFeedbackText').textContent = '';
+  const nb = document.getElementById('quizNextBtn');
+  nb.className = 'next-btn';
+  nb.style.background = 'var(--accent2)';
+  nb.style.color = 'var(--bg)';
+  nb.textContent = quizIdx < quizQuestions.length - 1 ? 'Next Question →' : 'See Results →';
+}
+
+function selectQuizAnswer(idx, btn) {
+  if (answered) return;
+  answered = true;
+  const q = quizQuestions[quizIdx];
+  const isCorrect = idx === q.correct;
+  if (isCorrect) {
+    quizScore++;
+    if (quizBreakdown[q.stageTitle]) quizBreakdown[q.stageTitle].correct++;
+  }
+  if (quizBreakdown[q.stageTitle]) quizBreakdown[q.stageTitle].total++;
+
+  document.querySelectorAll('#quizOptions .option-btn').forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.correct) b.classList.add('correct');
+    else if (i === idx && !isCorrect) b.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('quizFeedback');
+  fb.className = 'feedback-box show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+  document.getElementById('quizFeedbackLabel').textContent = isCorrect ? '✓ Correct!' : '✗ Not quite.';
+  document.getElementById('quizFeedbackText').textContent = q.exp;
+  document.getElementById('quizNextBtn').className = 'next-btn show';
+}
+
+function nextQuizQ() {
+  quizIdx++;
+  renderQuizQ();
+}
+
+// ══════════════════════════════════════════
+//  RESULTS
+// ══════════════════════════════════════════
+function showResults() {
+  const total = quizQuestions.length;
+  const pct = total > 0 ? Math.round((quizScore / total) * 100) : 0;
+  const circumference = 2 * Math.PI * 60;
+
+  document.getElementById('resultsIcon').textContent = pct >= 80 ? '🏆' : pct >= 60 ? '⭐' : '📚';
+  document.getElementById('resultsTitle').textContent = pct >= 80 ? 'Outstanding!' : pct >= 60 ? 'Good work!' : 'Keep going!';
+  document.getElementById('resultsSub').textContent =
+    `You scored ${quizScore} out of ${total} questions (${pct}%). ` +
+    (pct >= 80 ? 'You have a strong grasp of connected speech!' : pct >= 60 ? 'Review the stages you found tricky.' : 'Go back to the lessons and practise more.');
+  document.getElementById('scorePct').textContent = pct + '%';
+
+  const arc = document.getElementById('scoreArc');
+  const fill = (pct / 100) * circumference;
+  arc.setAttribute('stroke-dasharray', `${fill} ${circumference - fill}`);
+  arc.setAttribute('stroke', pct >= 80 ? '#3ddc84' : pct >= 60 ? '#ffd60a' : '#ff6b6b');
+
+  // Breakdown
+  const bd = document.getElementById('resultsBreakdown');
+  bd.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;letter-spacing:1px">STAGE BREAKDOWN</div>';
+  Object.entries(quizBreakdown).forEach(([stage, data]) => {
+    const p = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
+    const row = document.createElement('div');
+    row.className = 'breakdown-row';
+    row.innerHTML = `<span class="breakdown-stage">${stage}</span><span class="breakdown-score" style="color:${p>=80?'var(--green)':p>=60?'var(--accent2)':'var(--accent3)'}">${data.correct}/${data.total} (${p}%)</span>`;
+    bd.appendChild(row);
+  });
+
+  showScreen('results');
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+renderHome();
+</script>
+</body>
+</html>
